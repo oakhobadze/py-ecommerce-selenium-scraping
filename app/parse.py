@@ -2,6 +2,7 @@ import csv
 from dataclasses import dataclass
 from urllib.parse import urljoin
 from selenium import webdriver
+from selenium.common import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
@@ -45,17 +46,17 @@ def scrape(driver: webdriver.Chrome, url: str) -> list[Product]:
     while True:
         try:
             button = WebDriverWait(driver, 10).until(
-                ec.element_to_be_clickable((By.CSS_SELECTOR,
-                                            ".ecomerce-items-scroll-more"))
+                ec.element_to_be_clickable((By.CSS_SELECTOR, ".ecomerce-items-scroll-more"))
             )
             driver.execute_script("arguments[0].click();", button)
 
             WebDriverWait(driver, 10).until(
-            ec.presence_of_all_elements_located((By.CLASS_NAME, "thumbnail"))
+                ec.presence_of_all_elements_located((By.CLASS_NAME, "thumbnail"))
             )
 
-        except:
-             break
+
+        except (TimeoutException, NoSuchElementException):
+            break
 
     cards = driver.find_elements(By.CLASS_NAME, "thumbnail")
     products = [parse_single_product(card) for card in cards]
